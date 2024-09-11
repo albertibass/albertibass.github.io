@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS 180: Project 1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .description {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: left;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .image-container {
+            display: inline-block;
+            margin: 10px;
+            vertical-align: top;
+        }
+        img {
+            width: 400px;
+            height: auto;
+            max-width: 100%;
+            border: 1px solid #ddd;
+        }
+        .offsets {
+            font-size: 14px;
+            color: #555;
+            text-align: left;
+        }
+        .offsets p {
+            display: inline-block;
+            margin: 0 10px;
+        }
+        .image-row {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 1: Images of the Russian Empire: Colorizing the Prokudin-Gorskii photo collection</h1>
+    <h3>Albert Wang</h3>
+
+
+    <div class="description">
+        <h2>Overview:</h2>
+        <p>Sergei Mikhailovich Prokudin-Gorskii sought to produce color photographs by taking three exposures of scenes using red, blue and green filters. This project takes digitized Prokudin-Gorskii glass plate images, and automatically aligns the red, blue, and green channels to produce the clearest color image possible.</p>
+    </div>
+
+    <div class="description">
+        <h2>General Approach:</h2>
+        <p>First, I cropped the image. I found that cropping 1.5% off the top and bottom and 3% off the sides yielded the best results.</p>
+        <p>For my error metric to be used for alignment, I chose to use normalized cross correlation (NCC). This involved flattening the images, calculating the dot product of the flattened images, and then normalizing them. This NCC metric was used for both the naive full-search approach and for the pyramid. I chose the shift values that yielded the largest NCC values.</p>
+        <p>For the smaller .jpg images, I perform a simple naive search over the range (-15, 15) to test every possible shift of x and y with a nested for loop. I find the best shift based on whichever one gives me the highest NCC value.</p>
+        <p>For the larger .tif images, I used a recursive image pyramid with 3 layers. Each layer of the pyramid is downscaled by 2 from the previous layer. To construct the pyramid, the image is recursively downsized by a factor of 2, until the image dimensions are smaller than 360 or if the lowest level is reached. At this level, I perform a full (-15, 15) search. Otherwise, for higher levels of the pyramid, I search over just a smaller (-3, 3) window. Then, the images are rescaled back up.</p>
+        <p>One unexpected issue was that upon initially running my algorithm on lady.tif and self_portrait.tif, the red_shift was slightly off. This may have been caused by the wider black lines and distortion near the edges, because I was able to produce better images by simply increasing the crop on the sides from 3% to 4% for these images.</p>
+    </div>
+
+    <div class="image-row">
+        <div class="image-container">
+            <h2>cathedral.jpg</h2>
+            <img src="media/cathedral.jpg" alt="Cathedral">
+            <div class="offsets">
+                <p>Red Shift: (-9, 3)</p>
+                <p>Green Shift: (-7, 2)</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <h2>church.tif</h2>
+            <img src="media/church.jpg" alt="Church">
+            <div class="offsets">
+                <p>Red Shift: (-134, -4)</p>
+                <p>Green Shift: (-72, 0)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="image-row">
+        <div class="image-container">
+            <h2>emir.tif</h2>
+            <img src="media/emir.jpg" alt="Emir">
+            <div class="offsets">
+                <p>Red Shift: (-91, 42)</p>
+                <p>Green Shift: (-48, 24)</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <h2>harvesters.tif</h2>
+            <img src="media/harvesters.jpg" alt="Harvesters">
+            <div class="offsets">
+                <p>Red Shift: (-69, 13)</p>
+                <p>Green Shift: (-36, 15)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="image-row">
+        <div class="image-container">
+            <h2>icon.tif</h2>
+            <img src="media/icon.jpg" alt="Icon">
+            <div class="offsets">
+                <p>Red Shift: (-104, 22)</p>
+                <p>Green Shift: (-57, 17)</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <h2>lady.tif</h2>
+            <img src="media/lady.jpg" alt="Lady">
+            <div class="offsets">
+                <p>Red Shift: (-84, 10)</p>
+                <p>Green Shift: (-42, 0)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="image-row">
+        <div class="image-container">
+            <h2>melons.tif</h2>
+            <img src="media/melons.jpg" alt="Melons">
+            <div class="offsets">
+                <p>Red Shift: (-16, 11)</p>
+                <p>Green Shift: (-12, 8)</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <h2>monastery.jpg</h2>
+            <img src="media/monastery.jpg" alt="Monastery">
+            <div class="offsets">
+                <p>Red Shift: (-15, 0)</p>
+                <p>Green Shift: (-13, 2)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="image-row">
+        <div class="image-container">
+            <h2>onion_church.tif</h2>
+            <img src="media/onion_church.jpg" alt="Onion Church">
+            <div class="offsets">
+                <p>Red Shift: (-84, 36)</p>
+                <p>Green Shift: (-44, 25)</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <h2>sculpture.tif</h2>
+            <img src="media/sculpture.jpg" alt="Sculpture">
+            <div class="offsets">
+                <p>Red Shift: (-55, -26)</p>
+                <p>Green Shift: (-64, -11)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="image-row">
+        <div class="image-container">
+            <h2>self_portrait.tif</h2>
+            <img src="media/self_portrait.jpg" alt="Self Portrait">
+            <div class="offsets">
+                <p>Red Shift: (-22, 35)</p>
+                <p>Green Shift: (-22, 26)</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <h2>three_generations.tif</h2>
+            <img src="media/three_generations.jpg" alt="Three Generations">
+            <div class="offsets">
+                <p>Red Shift: (-81, 9)</p>
+                <p>Green Shift: (-41, 12)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="image-row">
+        <div class="image-container">
+            <h2>tobolsk.jpg</h2>
+            <img src="media/tobolsk.jpg" alt="Tobolsk">
+            <div class="offsets">
+                <p>Red Shift: (-14, 3)</p>
+                <p>Green Shift: (-7, 2)</p>
+            </div>
+        </div>
+
+        <div class="image-container">
+            <h2>train.tif</h2>
+            <img src="media/train.jpg" alt="Train">
+            <div class="offsets">
+                <p>Red Shift: (-107, 29)</p>
+                <p>Green Shift: (-54, 2)</p>
+        </div>
+    </div>
+
+    <div style="height: 60px;"></div>
+
+    <div class="image-row">
+        <h4> A few images of my own choosing from the Prokudin-Gorskii collection:</h4>
+        <div class="image-container">
+            <h2><a href="https://www.loc.gov/item/2018681171/" target="_blank">arch.tif</a></h2>
+            <img src="media/arch.jpg" alt="Arch">
+            <div class="offsets">
+                <p>Red Shift: (-92, 17)</p>
+                <p>Green Shift: (-66, 21)</p>
+            </div>
+        </div>
+    
+        <div class="image-container">
+            <h2><a href="https://www.loc.gov/item/2018679343/" target="_blank">table.tif</a></h2>
+            <img src="media/table.jpg" alt="Table">
+            <div class="offsets">
+                <p>Red Shift: (-81, 29)</p>
+                <p>Green Shift: (-43, 21)</p>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>
