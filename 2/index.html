@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project 2: Fun with Filters and Frequencies!</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: left;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+            white-space: nowrap;
+        }
+        h1 {
+            font-size: 2.5em;
+        }
+        h2 {
+            font-size: 2em;
+        }
+        h3 {
+            font-size: 1.5em;
+            margin-top: 40px;
+        }
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        ol {
+            margin-left: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+            display: block;
+        }
+        
+        .image-small {
+            width: 600px;
+        }
+
+        .image-large {
+            width: 800px;
+        }
+
+        .image-double {
+            width: 1200px;
+        }
+
+        .image-part15 {
+            width: 600px;
+        }
+        .conclusion {
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Project 2: Fun with Filters and Frequencies!</h1>
+        <h2>Albert Wang</h2>
+
+        <p>In this project, we play around with 2D convolutions and filtering, using different image manipulation techniques to blur/sharpen images, generate hybrid images, and blend images together.</p>
+
+        <h2>Part 1: Fun with Filters</h2>
+
+        <h3>Part 1.1: Finite Difference Operator</h3>
+
+        <p>Here, we use finite difference operators <em>Dx</em> and <em>Dy</em> to look for horizontal and vertical edges. Next, we calculate the gradient magnitude by doing <code>sqrt(dx<sup>2</sup> + dy<sup>2</sup>)</code> and binarize the image to show the edge image. I used a threshold of 0.1.</p>
+        <p>Original Image:</p>
+        <img src="media/cameraman.png" alt="cameraman" class="image-small">
+        <p>After Processing:</p>
+        <img src="media/part1.png" alt="Finite Difference Operator Result" class="image-small">
+
+        <h3>Part 1.2: Applying Gaussian Filter</h3>
+
+        <p>To make this image less rough, we can use a Gaussian filter. Now we blur the image before applying the finite difference operators. We can see this generates smoother images. This requires two convolutions: convolving the image with the Gaussian filter to blur it, and then convolving the blurred image with the finite difference operator. We can see that in the result, the edges are a lot smoother and there is less noise.</p>
+
+        <img src="media/part2.png" alt="Gaussian Filter Applied" class="image-small">
+
+        <p>Alternatively, we can first convolve the Gaussian filter with each of the finite difference operators, then convolve each of those with the original image. This is known as the DoG (Derivative of Gaussian) approach. We can see that using the DoG approach gives us the same result.</p>
+
+        <img src="media/part3.png" alt="DoG Approach Result" class="image-small">
+
+        <h2>Part 2: Fun with Frequencies</h2>
+
+        <h3>Part 2.1: Image "Sharpening"</h3>
+
+        <p>Next, we will "sharpen" images by using an unsharp mask filter. This involves the following steps:</p>
+        <ol>
+            <li>Blur the image (convolve it with a Gaussian filter). The Gaussian is a low-pass filter that will isolate the low frequencies of the image.</li>
+            <li>Subtract the blurred image from the original image to get the high frequencies.</li>
+            <li>Add (alpha * high frequencies) back to the original image, emphasizing high frequencies and thus "sharpening" the image.</li>
+        </ol>
+
+        <p>Here's the result on the Taj Mahal:</p>
+
+        <img src="media/part4.png" alt="Sharpened Taj Mahal" class="image-small">
+
+        <p>Here's the result on my go-to low-res Slack photo:</p>
+
+        <img src="media/part5.png" alt="Sharpened Slack Photo" class="image-small">
+
+        <p>However, this method of sharpening isn't always able to magically reproduce details. To demonstrate this, I'll start with a high-res photo of Ray Chen, blur it, and then resharpen it using this method.</p>
+
+        <img src="media/part6.png" alt="Resharpened Ray Chen" class="image-small">
+
+        <p>You can see that although it's clearer than the blurred image, the resharpened version loses many of the details of the original. There is more visual noise, and the image just generally looks grainier.</p>
+
+        <h3>Part 2.2: Hybrid Images</h3>
+
+        <p>Next, we will create hybrid images. To do this, we will mix high frequencies from one image with low frequencies from another image. From afar, low frequencies will be more visible, but from up close, higher frequencies will dominate. We will use the Gaussian filter to extract low/high frequencies as mentioned in Part 2.1. This effect works best when the images are of similar shape and are aligned correctly.</p>
+
+        <img src="media/part7.png" alt="Hybrid Image Example" class="image-large">
+
+        <p>Here is my favorite result, combining a pickleball with a sleeping cat. It works well because of the similarity of the shapes.</p>
+
+        <img src="media/part8.png" alt="Pickleball and Cat Hybrid" class="image-double">
+
+        <p>This is the log magnitude of the Fourier transform used:</p>
+
+        <img src="media/part9.png" alt="Fourier Transform Log Magnitude" class="image-large">
+
+        <p>This method didn't work so well when I tried to merge Kirby and Meta Knight. This is likely because although they are similar characters (at least I thought so), their shapes in these images are too different and don't align well. These pictures both also have dark lines that are visible from both up close and afar.</p>
+
+        <img src="media/part10.png" alt="Kirby and Meta Knight Hybrid" class="image-double">
+
+        <h3>Part 2.3/2.4: Gaussian and Laplacian Stacks and Multiresolution Blending</h3>
+
+        <p>In this part, I implemented a Gaussian and Laplacian Stack. The Gaussian Stack is created by repeatedly blurring an image with the Gaussian filter. The Laplacian is generated by taking the difference between successive layers in the Gaussian Stack and encodes the frequencies between two corresponding images in the Gaussian Stack. This process is done on each color channel (R, G, B) and then combined back together.</p>
+
+        <img src="media/part11.png" alt="Gaussian Stack" class="image-large">
+
+        <img src="media/part12.png" alt="Laplacian Stack" class="image-large">
+
+        <p>We can use these Gaussian/Laplacian Stacks to help blend images. To do this, we create a mask which tells us which pixels from each image we want to use. We generate a Gaussian for the mask and also the Laplacian for the images that we are merging. Then, we combine them together using <code>L1 * M + L2 * (1 - M)</code> to generate our blended image.</p>
+
+        <p>Here, we will do it on an apple and orange:</p>
+
+        <img src="media/part13.png" alt="Apple and Orange Original" class="image-large">
+
+        <img src="media/part14.png" alt="Apple and Orange Mask" class="image-large">
+
+        <img src="media/part15.png" alt="Blended Apple and Orange" class="image-part15">
+
+        <p>Here, I apply the same multiresolution blending on two K/DA All OUT Ahri chromas (where is my Riot Games offer?):</p>
+
+        <img src="media/part16.png" alt="Ahri Chromas Blended" class="image-double">
+
+        <p>Here's an example with a custom mask instead of just using a vertical seam to give Pikachu a pickleball head:</p>
+
+        <img src="media/part17.png" alt="Pikachu and Pickleball Original" class="image-large">
+
+        <img src="media/part18.png" alt="Custom Mask" class="image-large">
+
+        <img src="media/part19.png" alt="Blended Pikachu and Pickleball" class="image-double">
+
+        <h2 class="conclusion">Conclusion</h2>
+
+        <p>In this project, I learned about how we can use convolution and the Gaussian to achieve such a wide variety of image manipulation effects. It was fun to see what worked and what didn't. Trying out different values for different parameters in each of the functions yielded varying results, and it was cool to tweak the parameters to generate the best images.</p>
+    </div>
+</body>
+</html>
