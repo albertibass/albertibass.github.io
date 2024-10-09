@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Project 3: Face Morphing</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            line-height: 1.6;
+            padding: 0 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        img {
+            height: auto;
+            margin: 10px 0;
+        }
+        .image-group, .large-image-group, .xlarge-image-group, .two-row-image-group, .xxlarge-image-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .image-group img {
+            flex: 1 1 calc(20% - 10px);
+            max-width: 150px;
+        }
+        .large-image-group img {
+            flex: 1 1 calc(30% - 10px);
+            max-width: 250px;
+        }
+        .xlarge-image-group img {
+            flex: 1 1 calc(30% - 10px);
+            max-width: 350px;
+        }
+
+        .xxlarge-image-group img {
+            flex: 1 1 calc(30% - 10px);
+            max-width: 400px;
+        }
+        .xlarge-image {
+            display: block;
+            margin: 10px auto;
+            max-width: 600px;
+        }
+        .mean-face {
+            display: block;
+            margin: 10px auto;
+            max-width: 500px;
+        }
+
+        .two-row-image-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .two-row-image-group img {
+            flex: 1 1 calc(23% - 10px);
+            max-width: 300px;
+        }
+        .small-image-group img {
+            flex: 1 1 calc(30% - 10px);
+            max-width: 150px;
+        }
+        .gif-container {
+            text-align: center;
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .gif {
+            max-width: 100%;
+            height: auto;
+        }
+        .replay-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Project 3: Face Morphing</h1>
+        <h2>Albert Wang</h2>
+    
+        <h3>Part 1: Defining Correspondences</h3>
+        <p>
+            To morph two faces together, we first have to map corresponding pairs of points between the two faces. I picked points that outlined facial features, such as the eyes, eyebrows, nose, mouth, hairline, etc, using the CS180 correspondence tool to do so. I also included points at the four corners of the image as well.
+        </p>
+        <p>
+            After generating the keypoint correspondences for my face and John DeNero's face, I averaged each pair of keypoints between our faces and then created a Delaunay triangulation using those averaged points.
+        </p>
+
+        <div class="image-group xxlarge-image-group">
+            <img src="media/mycorrespondences.png" alt="My Correspondences">
+            <img src="media/johncorrespondences.png" alt="John's Correspondences">
+            <img src="media/triangularization.png" alt="Triangulation">
+        </div>
+    
+        <h3>Part 2: Computing the "Mid-Way Face"</h3>
+        <p>
+            To compute the "mid-way" face, we iterate through each triangle in the Delaunay triangulation of the average shape, and find the corresponding triangle in my face and John's face, and warp the corresponding triangles from both source images into the mean shape using affine transformation. To do this, we calculate an affine transformation matrix that transforms each triangle in the source images to the corresponding triangle in the mean shape. After determining the affine transformation, for every point inside average shape triangle, we compute its corresponding source points in the original images. This is done by applying the inverse of the transformation matrix to the mean triangle's coordinates. We use <code>skimage.draw.polygon</code> to get the pixel coordinates that fall inside each triangle in the mean shape, ensuring that all relevant pixels are processed. Then, we interpolate the color in the mean image from the source images using <code>scipy.ndimage.map_coordinates</code>. We blend the two images by averaging their pixel values and warping both to the mean shape, which produces the midway face.
+        </p>
+        <div class="image-group large-image-group">
+            <img src="media/picA.jpg" alt="Image A">
+            <img src="media/picB.jpg" alt="Image B">
+        </div>
+        <div>
+            <img src="media/albsjohnavg.png" alt="Mid-Way Face" class="xlarge-image">
+        </div>
+        <p>
+            The <code>morph(im1, im2, im1_pts, im2_pts, tri, warp_frac, dissolve_frac)</code> function is responsible for blending the two images. The parameter <code>warp_frac</code> controls how much of each image's shape is warped towards the mean shape, while <code>dissolve_frac</code> controls how much of each image's pixel values are blended. For the midway face, both <code>warp_frac</code> and <code>dissolve_frac</code> are set to 0.5.
+        </p>
+    
+        <h3>Part 3: The Morph Sequence</h3>
+        <p>
+            Using the morph function described in part 2, I capture frames using different warp and dissolve fractions to generate this morph sequence between me and John.
+        </p>
+
+        <div class="gif-container">
+            <img id="morphGif" src="media/albstojohn.gif" alt="Morph Sequence" class="gif">
+            <button class="replay-button" onclick="replayGif()">Play Morph Sequence</button>
+        </div>
+    
+        <h3>Part 4: The "Mean Face" of a Population</h3>
+        <p>
+            Using the Danes dataset, I first compute the average face shape of the dataset. The dataset came with .asf files with the keypoints for each image, which I averaged to get the mean shape and found the Delaunay triangulation. Then, for each face in the dataset, I morphed it to fit the average shape. This follows the same affine transformation, inverse warping, and interpolation process as described in Part 2.
+        </p>
+        <p>
+            Here are a few examples of individuals morphed to the average shape.
+        </p>
+   
+        <div class="image-group xxlarge-image-group">
+            <img src="media/face1.png" alt="Face 1">
+            <img src="media/face2.png" alt="Face 2">
+            <img src="media/face3.png" alt="Face 3">
+        </div>
+        <p>
+            After warping all faces to the average, I took the average of these faces to compute the average Dane face.
+        </p>
+        <img src="media/meanface.png" alt="Mean Face" class="xlarge-image">
+        <p>
+            I also warped my face to the average Dane shape, and morphed the average Dane face to my face as well.
+        </p>
+   
+        <div class="image-group xxlarge-image-group">
+            <img src="media/meantoalbs.png" alt="Mean to My Face">
+            <img src="media/albstomean.png" alt="My Face to Mean">
+        </div>
+    
+        <h3>Part 5: Caricatures: Extrapolating from the Mean</h3>
+        <p>
+            I can create caricatures by extrapolating from the mean Dane face to create exaggerated features. I use the formula 
+            <code>new_points = orig_points + alpha * (orig_points - mean_points)</code> to emphasize deviations of my face from the mean Dane face. Here are the results with different alphas:
+        </p>
+    
+        <div class="two-row-image-group">
+            <img src="media/alpha1.png" alt="Alpha 1">
+            <img src="media/alpha2.png" alt="Alpha 2">
+            <img src="media/alpha3.png" alt="Alpha 3">
+            <img src="media/alpha4.png" alt="Alpha 4">
+            <img src="media/alpha5.png" alt="Alpha 5">
+            <img src="media/alpha6.png" alt="Alpha 6">
+            <img src="media/alpha7.png" alt="Alpha 7">
+            <img src="media/alpha8.png" alt="Alpha 8">
+        </div>
+    
+        <h3>Bells and Whistles: Changing Gender of My Face</h3>
+        <p>
+            Using an averaged Chinese female image, I morphed my face to the average image using only shape, only color, and both. Here were the results:
+        </p>
+        <div class="image-group small-image-group">
+            <img src="media/albs_base_face.jpg" alt="My Face">
+            <img src="media/female_asian_face.jpg" alt="Average Chinese Female Face">
+        </div>
+   
+        <div class="image-group xxlarge-image-group">
+            <img src="media/justshape.png" alt="Just Shape">
+            <img src="media/justappearance.png" alt="Just Appearance">
+            <img src="media/bothshapeappear.png" alt="Both Shape and Appearance">
+        </div>
+    </div>
+
+
+    <script>
+        function replayGif() {
+            var gif = document.getElementById('morphGif');
+            var src = gif.src;
+            gif.src = ''; 
+            gif.offsetHeight;
+            gif.src = src; 
+        }
+    </script>
+</body>
+</html>
