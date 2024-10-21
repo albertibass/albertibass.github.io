@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project 4A: Image Warping and Mosaicing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 40px;
+            max-width: 800px;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            text-align: left;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .image-pair {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .image-pair img {
+            width: 30%;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Project 4A: Image Warping and Mosaicing</h1>
+    <h2>Albert Wang</h2>
+
+    <h2>Shoot the Pictures</h2>
+    <p>All photos are taken using my phone, with a slight rotation between each pair.</p>
+
+    <div class="image-pair">
+        <img src="media/kitchen1.jpg" alt="Kitchen Image 1">
+        <img src="media/kitchen2.jpg" alt="Kitchen Image 2">
+    </div>
+
+    <div class="image-pair">
+        <img src="media/mlk1.jpg" alt="MLK Image 1">
+        <img src="media/mlk2.jpg" alt="MLK Image 2">
+    </div>
+
+    <div class="image-pair">
+        <img src="media/breezeway1.jpg" alt="Breezeway Image 1">
+        <img src="media/breezeway2.jpg" alt="Breezeway Image 2">
+    </div>
+
+    <h2>Recover Homographies</h2>
+    <p>I wrote a <code>computeH</code> function that computes the homography matrix that is able to perform a transformation that can move the target image in any direction or angle (8 degrees of freedom). The homography matrix has 8 unknowns so we need at least 4 keypoint pairs. I ended up providing more than 4 pairs of points, and used least squares to find the optimal H.</p>
+
+    <h2>Warp the Images/Image Rectification</h2>
+    <p>After calculating H, we can warp one image to the other, using a similar interpolation approach as in Project 3: I map every pixel in the output image back to the corresponding location using the inverse H matrix, using <code>map_coordinates</code> when necessary to interpolate pixel values.</p>
+
+    <p>Using this warping, I am able to rectify some angled views of rectangular objects and warp them to a regular rectangular shape, showing what they would look like from a frontal view.</p>
+
+    <p><img src="media/food_warp.jpeg" alt="Food Warp"></p>
+
+    <p><img src="media/smash_warp.jpeg" alt="Smash Warp"></p>
+    <p><img src="media/smash_warp_zoom.jpg" alt="Smash Warp Zoom" style="width:50%;"></p>
+    <p style="text-align:center;"><small>Zoomed Rectified Smash Poster</small></p>
+
+    <h2>Mosaic Blending</h2>
+    <p>Using these warps, we can also create a mosaic. We warp one image onto the other using a set of keypoints. Simply placing these images on top of each other creates rough edges, so we use a multi-resolution blending approach similar to that in Project 2, creating a mask and using Gaussian and Laplacian stacks to blend the two images together. This creates these final mosaics:</p>
+
+    <p><img src="media/kitchen_mosaic.jpeg" alt="Kitchen Mosaic"></p>
+    <p><img src="media/mlk_mosaic.jpeg" alt="MLK Mosaic"></p>
+    <p><img src="media/breezeway_mosaic.jpeg" alt="Breezeway Mosaic"></p>
+</body>
+</html>
