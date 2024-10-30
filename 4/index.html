@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Project 4A: Image Warping and Mosaicing</title>
+    <title>Project 4: [Auto]Stitching Photo Mosaics</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,7 +25,7 @@
             margin-left: auto;
             margin-right: auto;
         }
-        .image-pair {
+        .image-pair, .image-pair_bigger {
             display: flex;
             justify-content: center;
             gap: 10px;
@@ -33,10 +33,16 @@
         .image-pair img {
             width: 30%;
         }
+        .image-pair_bigger img {
+            width: 75%;
+        }
         code {
             background-color: #f5f5f5;
             padding: 2px 4px;
             font-family: monospace;
+        }
+        small {
+            color: #666;
         }
     </style>
 </head>
@@ -82,5 +88,59 @@
     <p><img src="media/kitchen_mosaic.jpeg" alt="Kitchen Mosaic"></p>
     <p><img src="media/mlk_mosaic.jpeg" alt="MLK Mosaic"></p>
     <p><img src="media/breezeway_mosaic.jpeg" alt="Breezeway Mosaic"></p>
+
+    <h1>Project 4B: Feature Matching for Autostitching</h1>
+
+
+    <p>For the second part of the project, we will create these same mosaics, but stitch them together automatically, rather than having to manually select corresponding points between the two images.</p>
+
+
+    <h2>Detecting Corner Features</h2>
+    <p>First, I used the provided <code>get_harris_corners</code> code to get all the corners in the image. This function discards key points near image borders and then uses <code>peak_local_max</code> to extract the most prominent corners.</p>
+
+    <p><img src="media/harris_corners.jpeg" alt="Harris Corners"></p>
+
+    <h2>Adaptive Non-Maximal Suppression (ANMS)</h2>
+    <p>Then using Adaptive Non-Maximal Suppression (ANMS), I chose the top 500 corners by selecting the corners with the largest radii. The formula for radii is:</p>
+
+    <p><img src="media/radii.png" alt="Radii Formula"></p>
+
+    <p><img src="media/anms.jpeg" alt="ANMS"></p>
+
+    <h2>Extracting Feature Descriptors</h2>
+    <p>Next, for each feature point detected, to extract descriptors from the key points, I implemented Multi-Scale Oriented Patches, or MOPS. For each key point, I sample a 40x40 patch around it. The patch is blurred and downsampled to an 8x8 patch to avoid noise, and then normalized. An example is shown:</p>
+
+    <p><img src="media/descriptor.jpeg" alt="Feature Descriptor"></p>
+
+    <h2>Matching Feature Descriptors</h2>
+    <p>Next, to match feature descriptors between two images, I used Lowe's ratio test. I calculated the SSD distance between each pair of descriptors from the two images. For each descriptor, I found the two closest matches. If the ratio between the first and second neighbors was below a threshold of 0.5, I kept that match. Here's the result:</p>
+
+    <p><img src="media/lowes.jpeg" alt="Lowe's Ratio Test"></p>
+
+    <h2>Using RANSAC to Create a Homography</h2>
+    <p>To get rid of the outliers, I used Random Sample Consensus (RANSAC) to compute a robust homography matrix. This function works by selecting 4 random matches at a time to compute a homography matrix. For each homography, if the projected point is within a 5-pixel threshold, it is considered an inlier. This is repeated 200 times, and then finally, the homography with the most inliers is selected.</p>
+
+    <p><img src="media/ransac.jpeg" alt="RANSAC"></p>
+
+    <h2>Auto-stitched Mosaics</h2>
+    <p>After using RANSAC to compute the homography matrix, I follow the same stitching/warping process as I used in part A of the project to produce the mosaics. I've displayed the results of the auto-stitched mosaics side by side with the mosaics from part A, which were created from manually matched points.</p>
+
+    <div class="image-pair_bigger">
+        <img src="media/mlk_auto.jpeg" alt="MLK Auto-stitched Mosaic">
+        <img src="media/mlk_mosaic.jpeg" alt="MLK Manual Mosaic">
+    </div>
+
+    <div class="image-pair_bigger">
+        <img src="media/kitchen_auto.jpeg" alt="Kitchen Auto-stitched Mosaic">
+        <img src="media/kitchen_mosaic.jpeg" alt="Kitchen Manual Mosaic">
+    </div>
+
+    <div class="image-pair_bigger">
+        <img src="media/breezeway_auto.jpeg" alt="Breezeway Auto-stitched Mosaic">
+        <img src="media/breezeway_mosaic.jpeg" alt="Breezeway Manual Mosaic">
+    </div>
+
+    <h2>What Have I Learned?</h2>
+    <p>It was very interesting to see how the auto-stitching process was able to create mosaics that are as accurate as the ones that were created by me manually selecting points that I knew should correspond to each other, and the process was surprisingly not as complicated as I thought it would be. In particular, it was cool to see how Lowe's trick combined with RANSAC were able to very accurately pick out which pairs of points were the best for creating the mosaic.</p>
 </body>
 </html>
